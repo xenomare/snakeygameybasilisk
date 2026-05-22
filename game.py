@@ -30,10 +30,10 @@ class Snake:
 snake = Snake(COLS // 2, ROWS // 2)
 
 def draw():
-    screen.fill((0, 0, 0))
+    screen.blit('backround', (0, 0))
     # Gitternetz zeichnen
     for x in range(COLS + 1):
-        px = x * GRID_SIZE
+        px = x * GRID_SIZE *10000
         screen.draw.line((px, 0), (px, HEIGHT), (40, 40, 40))
     
     for y in range(ROWS + 1):
