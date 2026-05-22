@@ -9,12 +9,12 @@ ROWS = HEIGHT // GRID_SIZE
 class Grid:
 
     """Umrechnung zwischen Grid-Koordinaten und Pixel-Positionen"""
-    @staticmethod
+    #@staticmethod
     def to_pixel(grid_x, grid_y):
         """Grid-Koordinate (z.B. 5, 3) -> Pixel-Position (250, 150)"""
         return grid_x * GRID_SIZE, grid_y * GRID_SIZE
     
-    @staticmethod
+   #@staticmethod
     def to_grid(pixel_x, pixel_y):
         """Pixel-Position (z.B. 250, 150) -> Grid-Koordinate (5, 3)"""
         return pixel_x // GRID_SIZE, pixel_y // GRID_SIZE
