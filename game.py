@@ -194,7 +194,12 @@ def update():
             game.score += 1
             game.snake.grow_pending += 1
             game.place_food()
-
+        # check wall
+        if game.snake.body[0] == game.wall:
+            game.state = 'game_over'
+            if game.score > game.highscore:
+                game.highscore = game.score
+                game.save_highscore()
         # self collision
         if game.snake.body[0] in game.snake.body[1:]:
             game.state = 'game_over'
