@@ -9,7 +9,7 @@ COLS = WIDTH // GRID_SIZE
 ROWS = HEIGHT // GRID_SIZE
 
 # Zellen pro Frame (z.B. 0.2 -> 5 Frames pro Zelle)
-SPEED = 0.05
+SPEED = 0.1
 
 HIGHSCORE_FILE = 'highscore.txt'
 
@@ -141,7 +141,7 @@ class Snake:
     def update(self):
         # apply turn only when aligned to grid
         px, py = self.pixel_pos
-        aligned = (px % GRID_SIZE == 0) and (py % GRID_SIZE == 0)
+        aligned = (px % GRID_SIZE == 0) and ((py) % GRID_SIZE == 0)
         if aligned:
             self.direction = self.next_direction
 
@@ -227,8 +227,10 @@ def draw_play():
 
     # food
     fx, fy = game.food
-    r = Rect((fx*GRID_SIZE, fy*GRID_SIZE), (GRID_SIZE, GRID_SIZE))
-    screen.draw.filled_rect(r, 'red')
+    food_actor = Actor('doener')
+    food_actor.topleft = (fx * GRID_SIZE, fy * GRID_SIZE)
+    food_actor.draw()
+
     fx, fy = game.wall
     r = Rect((fx*GRID_SIZE, fy*GRID_SIZE), (GRID_SIZE, GRID_SIZE))
     screen.draw.filled_rect(r, 'gray')
