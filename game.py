@@ -89,6 +89,7 @@ class Game:
     def reset(self):
         start = (COLS // 2, ROWS // 2)
         self.snake = Snake(start)
+        self.walls = []
         self.place_food()
         self.place_wall()
         self.score = 0
@@ -113,15 +114,16 @@ class Game:
         while True:
             fx = random.randrange(COLS)
             fy = random.randrange(ROWS)
-            if (fx, fy) not in self.snake.body:
+            if (fx, fy) not in self.snake.body and (fx, fy) not in self.walls:
                 self.food = (fx, fy)
                 break
+
     def place_wall(self):
         while True:
             fx = random.randrange(COLS)
             fy = random.randrange(ROWS)
-            if (fx, fy) not in self.snake.body:
-                self.wall = (fx, fy)
+            if (fx, fy) not in self.snake.body and (fx, fy) not in self.walls and (fx, fy) != self.food:
+                self.walls.append((fx, fy))
                 break
 
 
@@ -133,6 +135,8 @@ class Snake:
         self.direction = (1, 0)  # unit vector on grid
         self.next_direction = self.direction
         self.pixel_pos = tuple(grid_to_pixel(*start))
+        self.neck_delay = 0
+        self.neck_connector = None
     # draw in draw_play, update in update
     @property
     def head_grid(self):
@@ -150,7 +154,7 @@ class Snake:
         py += dy * SPEED * GRID_SIZE
 
         # collision with screen edges
-        if px < 0 or px > WIDTH:
+        if px < 0 or px >= WIDTH:
             game.state = 'game_over'
         if py < 0 or py >= HEIGHT:
             game.state = 'game_over'
@@ -165,12 +169,31 @@ class Snake:
                 self.grow_pending -= 1
             else:
                 self.body.pop()
+            self.neck_delay = 5
+        elif self.neck_delay > 0:
+            self.neck_delay -= 1
+            if self.neck_delay <= 0:
+                self.update_neck_connector()
+        elif self.neck_connector is None:
+            self.update_neck_connector()
     # ausgelöst in on_key_down
     def turn(self, nx, ny):
         # prevent reversing
         if (nx, ny) == (-self.direction[0], -self.direction[1]):
             return
         self.next_direction = (nx, ny)
+
+    def update_neck_connector(self):
+        if len(self.body) > 1:
+            neck_cell = self.body[1]
+            neck_px = (self.pixel_pos[0] + neck_cell[0] * GRID_SIZE) / 2
+            neck_py = (self.pixel_pos[1] + neck_cell[1] * GRID_SIZE) / 2
+            straight_angle = SPRITE_BASE_ROTATION['body_vertical']
+            if self.body[0][0] != neck_cell[0]:
+                straight_angle = (straight_angle + 90) % 360
+            self.neck_connector = (neck_px, neck_py, straight_angle)
+        else:
+            self.neck_connector = None
 
     def draw(self):
         # body segments and tail are grid aligned; head can move smoothly
@@ -195,6 +218,10 @@ class Snake:
             tail_dir = (tail[0] - before_tail[0], tail[1] - before_tail[1])
             tail_angle = (direction_to_angle(tail_dir) + SPRITE_BASE_ROTATION['tail']) % 360
             sprite_actor(SPRITES['tail'], grid_to_pixel(*tail), tail_angle).draw()
+
+        if len(self.body) > 1 and self.neck_connector is not None:
+            neck_px, neck_py, straight_angle = self.neck_connector
+            sprite_actor(SPRITES['straight'], (neck_px, neck_py), straight_angle).draw()
 
         head_angle = (direction_to_angle(self.direction) + SPRITE_BASE_ROTATION['body_head']) % 360
         head_actor = sprite_actor(SPRITES['head'], self.pixel_pos, head_angle)
@@ -231,9 +258,10 @@ def draw_play():
     food_actor.topleft = (fx * GRID_SIZE, fy * GRID_SIZE)
     food_actor.draw()
 
-    fx, fy = game.wall
-    r = Rect((fx*GRID_SIZE, fy*GRID_SIZE), (GRID_SIZE, GRID_SIZE))
-    screen.draw.filled_rect(r, 'gray')
+    for wx, wy in game.walls:
+        wall_actor = Actor('wall')
+        wall_actor.topleft = (wx * GRID_SIZE, wy * GRID_SIZE)
+        wall_actor.draw()
 
     game.snake.draw()
     screen.draw.text(f'Score: {game.score}', topleft=(10, 10), color='white')
@@ -272,8 +300,9 @@ def update():
             game.score += 1
             game.snake.grow_pending += 1
             game.place_food()
+            game.place_wall()
         # check wall
-        if game.snake.body[0] == game.wall:
+        if game.snake.body[0] in game.walls:
             game.state = 'game_over'
             if game.score > game.highscore:
                 game.highscore = game.score
