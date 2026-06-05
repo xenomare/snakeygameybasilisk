@@ -19,7 +19,7 @@ def grid_to_pixel(gx, gy):
 
 
 def pixel_to_grid(px, py):
-    return int(px) // GRID_SIZE, int(py) // GRID_SIZE
+    return int((px + GRID_SIZE / 2) // GRID_SIZE), int((py + GRID_SIZE / 2) // GRID_SIZE)
 #
 
 SPRITE_BASE_ROTATION = {
@@ -152,7 +152,7 @@ class Snake:
         # collision with screen edges
         if px < 0 or px > WIDTH:
             game.state = 'game_over'
-        if py < 0 or py > HEIGHT:
+        if py < 0 or py >= HEIGHT:
             game.state = 'game_over'
         
         old_cell = self.body[0]
